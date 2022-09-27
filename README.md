@@ -1,5 +1,4 @@
-# learning
-## projects of internet courses
+## learning: projects of internet courses
 
 - C++ course   
 - elice python course
