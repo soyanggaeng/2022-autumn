@@ -1,1 +1,2 @@
-## leetcode name: Yeonkyoung So
+## leetcode name: YeonkyoungSo
+link: https://leetcode.com/YeonkyoungSo/
