@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D3</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        rect:hover {
+            stroke: black;
+            stroke-width: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>확진자수 현황</h1>
+    <div class="canvas"></div>
+    <script>
+        const width = 800
+        const height = 800
+        // 마진 설정
+        let [mt, mb, mr, ml] = [50, 50, 50, 50]
+
+        const svg = d3.select('.canvas')
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height)
+
+        // console.log(mt, mb, mr, ml)
+        const graphWidth = width - ml - mr
+        const graphHeight = height - mt - mb
+
+        const graph = svg.append('g')
+                        .attr('width', graphWidth)
+                        .attr('height', graphHeight)
+                        .attr('transform', `translate(${ml}, ${graphHeight})`)
+
+        const xAxis = graph.append('g')
+                            .attr('transform', `translate(0, ${mt})`)
+        const yAxis = graph.append('g')
+
+        d3.json('/data4.json')
+            .then(function(data){
+                console.log(data);
+                [_, ...data] = [...data] // 전국 데이터 삭제
+                console.log(data);
+
+                const x = d3.scaleBand()
+                            .domain(data.map(item => item.지역이름))
+                            .range([0, graphWidth])
+                            .padding(0.25)
+
+                const y = d3.scaleLindear()
+                            .domain([0, d3.max(data, d => d.확진자수)])
+                            .range([graphHeight, 0]) // 내가 가진 높이만큼 마이너스를 해서 밑으로 그려야 바그래프가 나온다
+
+                const bars = graph.selectAll('rect')
+                                .data(data);
+                
+                bars.enter()
+                    .append('rect')
+                    .attr('height', d => graphHeight - y(d.확진자수))
+                    .attr('width', x.bandwidth)
+                    .attr('fill', 'hotpink')
+                    .attr('x', d => x(d.지역이름))
+                    .attr('y', d => y(d.확진자수))
+
+                // linegraph도 같이 그리기
+                const line = d3.line() // linegraph를 그릴 때 도움 주는 data 생성기, 쉽게 그래프 그릴 수 있다
+                                .x(d => x(d.지역이름) + 15)
+                                .y(d => y(d.확진자수))
+                                .curve(d3.curveBasis) // 각지게, 부드럽게 그릴 것인지 지정
+
+                bars.enter()
+                    .append('path')
+                    .attr('fill', 'none') // 나머지 공간들을 채워줌
+                    .attr('stroke', 'blue') 
+                    .attr('stroke-width', '2px')
+                    .attr('d', line(data))
+
+                bars.enter()
+                    .append('text')
+                    .attr('x', d => {
+                        if (d.확진자수 >= 1000){
+                            return x(d.지역이름) + 3
+                        }
+                        else if (d.확진자수 >= 100){
+                            return x(d.지역이름) + 6
+                        }
+                        else if (d.확진자수 >= 10){
+                            return x(d.지역이름) + 9
+                        }
+                        else if (d.확진자수 >= 1){
+                            return x(d.지역이름) + 12
+                        }
+                        else {
+                            return x(d.지역이름)
+                        }
+                    })
+                    .attr('y', d => y(d.확진자수) - 5) // 글자가 위로 올려짐
+                    .text(d => d.확진자수)
+                    .style('font-size', '12px')
+                    // .attr('text-anchor', 'middle') // text 옮겨지는 것
+
+                const xAxis = d3.axisBottom(x);
+                const yAxis = d3.axisLeft(y)
+                                .ticks(3)
+                                .tickFormat(d => d+'명')
+
+                xAxisG.call(xAxis)
+                yAxisG.call(yAxis)
+
+                xAxisG.selectAll('text')
+                    .attr('fill', 'blue')
+                    .attr('transform', 'rotate(-45)')
+                    .attr('text-anchor', 'end')
+
+            })
+            .catch(function(error){
+                console.log('실패!!');
+                console.log(err)
+            })
+    </script>
+</body>
+</html>

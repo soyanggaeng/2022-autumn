@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D3</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        rect:hover {
+            stroke: black;
+            stroke-width: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>확진자수 현황</h1>
+    <div class="canvas"></div>
+    <script>
+        const width = 1500
+        const height = 1500
+        // 마진 설정
+        let [mt, mb, mr, ml] = [150, 50, 50, 50]
+
+        const svg = d3.select('.canvas')
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height)
+
+        // console.log(mt, mb, mr, ml)
+        const graphWidth = width - ml - mr
+        const graphHeight = height - mt - mb
+
+        const graph = svg.append('g')
+                        .attr('width', graphWidth)
+                        .attr('height', graphHeight)
+                        .attr('transform', `translate(${ml}, ${graphHeight})`)
+
+        const xAxis = graph.append('g')
+                            .attr('transform', `translate(0, ${mt})`)
+        const yAxis = graph.append('g')
+
+        d3.json('/data4.json')
+            .then(function(data){
+                console.log(data);
+                [_, ...data] = [...data] // 전국 데이터 삭제
+                console.log(data);
+
+                const x = d3.scaleBand()
+                            .domain(data.map(item => item.지역이름))
+                            .range([0, graphWidth])
+                            .padding(0.25)
+
+                const y = d3.scaleLindear()
+                            .domain([0, d3.max(data, d => d.확진자수)])
+                            .range([graphHeight, 0]) // 내가 가진 높이만큼 마이너스를 해서 밑으로 그려야 바그래프가 나온다
+
+                const bars = graph.selectAll('rect')
+                                .data(data);
+                
+                bars.enter()
+                    .append('circle')
+                    .attr('fill', 'hotpink')
+                    .attr('cx', d => x(d.지역이름) + 50)
+                    .attr('cy', d => y(d.확진자수))
+                    .attr('r', d => d.확진자수/200) // 너무 커서 줄이기
+
+                bars.enter()
+                    .append('text')
+                    .attr('x', d => x(d.지역이름) + 23)
+                    .attr('y', d => {
+                        if (d.확진자수 >= 6000){
+                            return y(d.확진자수) - 85
+                        }
+                        else if (d.확진자수 >= 4000){
+                            return y(d.확진자수) - 65
+                        }
+                        else if (d.확진자수 >= 2000){
+                            return y(d.확진자수) - 45
+                        }
+                        else if (d.확진자수 >= 1000){
+                            return y(d.확진자수) - 25
+                        }
+                        else if (d.확진자수 >= 100){
+                            return y(d.확진자수) - 15
+                        }
+                        else if (d.확진자수 >= 10){
+                            return y(d.확진자수) - 5
+                        }
+                        else {
+                            return y(d.확진자수)
+                        }
+                    })
+                    .text(d => `${d.확진자수} / ${d.지역이름}`)
+                    .style('font-size', '12px')
+                    // .attr('text-anchor', 'middle') // text 옮겨지는 것
+
+                const xAxis = d3.axisBottom(x);
+                const yAxis = d3.axisLeft(y)
+                                .ticks(3)
+                                .tickFormat(d => d+'명')
+
+                xAxisG.call(xAxis)
+                yAxisG.call(yAxis)
+
+                xAxisG.selectAll('text')
+                    .attr('fill', 'blue')
+                    .attr('transform', 'rotate(-45)')
+                    .attr('text-anchor', 'end')
+
+            })
+            .catch(function(error){
+                console.log('실패!!');
+                console.log(err)
+            })
+    </script>
+</body>
+</html>

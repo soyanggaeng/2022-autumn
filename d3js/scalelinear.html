@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D3</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <script>
+        // domain은 실제 값
+        // range는 표현할 픽셀 값
+        const f1 = d3.scaleLinear().range([0, 100]). // y 좌표로 많이 씀, 색상으로 사용 가능
+        domain([0, 500])
+        console.log(f1(250)) // 50     
+        console.log(f1(0)) // 0
+        console.log(f1(500)) // 100
+        console.log(f1(100)) // 20
+        console.log(f1(1000)) // 200
+
+        crayons = d3.scaleLinear()
+        .domain([-1, 0, 1])
+        .range(["orange", "white", "green"])
+        console.log(crayons(0.3)) // rgb가 출력됨
+
+        const f = d3.scaleLinear().range([200, 500]).domain([20000000, 50000000])
+        console.log(f2(25000000))
+    </script>
+</body>
+</html>
